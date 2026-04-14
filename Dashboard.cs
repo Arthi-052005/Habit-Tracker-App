@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -221,11 +221,9 @@ namespace Habit_Tracker
             LoadChart();
         }
 
-        // ⭐ PERFECT CENTER FIX
         private void CenterAnalyticsUI()
         {
             int sidebarWidth = sidebar.Width;
-
             int availableWidth = this.ClientSize.Width - sidebarWidth;
 
             habitChart.Left = sidebarWidth + (availableWidth - habitChart.Width) / 2;
@@ -288,6 +286,12 @@ namespace Habit_Tracker
 
         private void BtnAdd_Click(object sender, EventArgs e)
         {
+            if (string.IsNullOrWhiteSpace(txtHabit.Text))
+            {
+                MessageBox.Show("Enter a habit!");
+                return;
+            }
+
             var db = MongoDBConnection.GetDatabase();
             var collection = db.GetCollection<Habit>("Habits");
 
@@ -309,7 +313,11 @@ namespace Habit_Tracker
 
         private void BtnDelete_Click(object sender, EventArgs e)
         {
-            if (habitList.SelectedItem == null) return;
+            if (habitList.SelectedItem == null)
+            {
+                MessageBox.Show("Select a habit!");
+                return;
+            }
 
             var selected = habitList.SelectedItem.ToString().Split('|')[0].Trim();
 
@@ -323,14 +331,28 @@ namespace Habit_Tracker
 
         private void BtnComplete_Click(object sender, EventArgs e)
         {
-            if (habitList.SelectedItem == null) return;
+            if (habitList.SelectedItem == null)
+            {
+                MessageBox.Show("Select a habit!");
+                return;
+            }
 
             var selected = habitList.SelectedItem.ToString().Split('|')[0].Trim();
 
             var db = MongoDBConnection.GetDatabase();
             var collection = db.GetCollection<Habit>("Habits");
 
-            var habit = collection.Find(h => h.Title == selected && h.Username == currentUser).FirstOrDefault();
+            var habit = collection.Find(h =>
+                h.Title == selected &&
+                h.Username == currentUser
+            ).FirstOrDefault();
+
+            // 🔴 FIXED NULL ERROR
+            if (habit == null)
+            {
+                MessageBox.Show("Habit not found!");
+                return;
+            }
 
             int newStreak = habit.Streak;
 
